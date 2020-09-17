@@ -17,10 +17,11 @@ exports.modifyUser = (req, res) => {
         connection.query(findUserQuery, [userID], function(err, result) {
             // Gestion des erreurs
             if (err) return res.status(500).json(err.message);
-
+            // Récupération du nom du fichier de l'image
             const filename = result[0].avatar_url.split("/images/")[1];
-            modifyUserQuery = "UPDATE users SET avatar_url = ? WHERE userID = ?";
+
             if (filename !== "defaultPic.png") {
+                let modifyUserQuery = "UPDATE users SET avatar_url = ? WHERE userID = ?";
                 // Suppression de l'ancienne image
                 fs.unlink(`images/${filename}`, () => {
                     connection.query(modifyUserQuery, [avatarUrl, userID], function(err) {
