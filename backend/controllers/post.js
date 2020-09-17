@@ -1,6 +1,5 @@
 const connection = require('../databaseConnection');
 const fs = require('fs');
-const { type } = require('os');
 const makeSlug = require('../helpers/slug_creator').makeSlug();
 
 exports.createPost = (req, res) => {
@@ -162,6 +161,7 @@ exports.deletePost = (req, res) => {
     });
 };
 
+// TODO ajouter la gestion des points dans posts
 exports.reactToPost = (req, res) => {
     const userID = res.locals.userID;
     const vote = req.body.type;
