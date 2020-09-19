@@ -62,7 +62,7 @@ exports.signin = (req, res) => {
                 // S'ils correspondent, les informations d'identification de notre utilisateur sont valides.
                 // Dans ce cas, renvoie une réponse 200 contenant l'ID utilisateur et un token.
                 return res.status(200).json({
-                    token: jwt.sign({ userID: result[0].user_id }, process.env.JWT_TOKEN, { expiresIn: '30min' }),
+                    token: jwt.sign({ userID: result[0].user_id }, process.env.JWT_TOKEN, { expiresIn: '30min' })
                 });
             })
             .catch((error) => res.status(500).json({ error }));

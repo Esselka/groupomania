@@ -4,7 +4,7 @@
   <div>
     <!-- Input pour l'email -->
     <div class="row mb-2">
-      <div class="col-lg-4 col-md-8 offset-lg-4 offset-md-2">
+      <div class="col-lg-4 col-md-8 mx-auto">
         <input
           class="form-control text-center"
           type="email"
@@ -22,7 +22,7 @@
     <!-- Fin -->
     <!-- Input pour le mot de passe -->
     <div class="row mb-2">
-      <div class="col-lg-4 col-md-8 offset-lg-4 offset-md-2">
+      <div class="col-lg-4 col-md-8 mx-auto">
         <input
           class="form-control text-center"
           type="password"
@@ -39,29 +39,36 @@
     </div>
     <!-- Fin -->
     <!-- Bouton de connexion -->
-    <div class="row mb-2">
-      <div class="col-lg-4 col-md-8 offset-lg-4 offset-md-2">
+    <div class="row">
+      <div class="col-lg-2 col-md-4 mx-auto mt-4 mb-4">
         <button
-          class="btn btn-light form-control text-center"
+          class="btn btn-dark form-control text-center"
           type="submit"
           v-on:click="sendRequest"
-        >{{ validateText }}</button>
-        <p class="text-muted" id="passwordInfo">
-          <slot name="messagePassword"></slot>
+        >
+        {{ buttonConnectRegister }}
+        </button>
+      </div>
+      <!-- Fin -->
+      <!-- Infos modèle mot de passe et message d'erreur -->
+      <div class="col-lg-12 col-md-11 mx-auto mb-4">
+        <p class="text-dark" id="passwordInfo">
+          <slot name="passwordModel"></slot>
         </p>
-        <p class="text-danger">
-          <slot name="messageError"></slot>
+        <p class="text-danger mt-3">
+          <slot name="errorMessage"></slot>
         </p>
       </div>
+      <!-- Fin -->
     </div>
-    <!-- Fin -->
+    
   </div>
 </template>
 
 <script>
 export default {
   name: "SigninPageForm",
-  props: ["formPlaceholder"],
+  props: ["buttonConnectRegister"],
   data: () => {
     return {
       email: "",
@@ -69,10 +76,11 @@ export default {
     };
   },
   methods: {
-    sendData() { // Envois des données au parent
+    // Envoi des données au parent
+    sendData() { 
       this.$emit("data-sent", this.$data);
     },
-    // Envoie de la requête au parent qui gère la transmission des données vers l'API
+    // Envoie de la requête au parent qui gère la transmission des données à l'API
     sendRequest() {
       const validEmail = document.getElementById("email").checkValidity();
       const validPassword = document.getElementById("password").checkValidity();
