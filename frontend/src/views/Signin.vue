@@ -5,7 +5,7 @@
     <SigninPage />
     <!-- Formulaire pour se connecter -->
     <form onsubmit="return false">
-      <SigninPageForm buttonConnectRegister="Se connecter" v-on:data-sent="updateDataSignin" v-on:request-sent="signin">
+      <SigninPageForm buttonConnectRegister="Se connecter" @data-sent="updateDataSignin" @request-sent="signin">
         <template v-slot:errorMessage>{{ message }}</template>
       </SigninPageForm>
     </form>

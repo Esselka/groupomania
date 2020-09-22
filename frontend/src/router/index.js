@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Signin from '../views/Signin'
 import Signup from '../views/Signup'
 import MainPage from '../views/MainPage'
+import Profile from '../views/Profile'
 
 Vue.use(VueRouter)
 
@@ -20,7 +21,12 @@ const routes = [{
         path: '/MainPage',
         name: 'MainPage',
         component: MainPage
-    }
+    },
+    {
+        path: '/Profile',
+        name: 'Profile',
+        component: Profile
+    },
 ]
 
 const router = new VueRouter({

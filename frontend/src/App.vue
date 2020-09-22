@@ -12,11 +12,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  background-color: #056DE6;
-  //min-height: 100%;
-}
-html {
-  background-color: #056DE6;
 }
 
 nav {
