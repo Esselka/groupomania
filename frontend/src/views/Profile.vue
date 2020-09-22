@@ -59,7 +59,7 @@
           <input
             class="form-control text-center mb-3"
             type="password"
-            placeholder="Changer de mot de passe"
+            placeholder="Nouveau mot de passe"
             id="newPassword"
             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
             aria-label="Nouveau mot de passe"
@@ -75,12 +75,12 @@
             <div class="input-group-append">
               <button
                 type="submit"
-                class="btn btn-light"
+                class="btn btn-success rounded"
                 v-on:click.prevent="updateProfile"
               >Mettre à jour</button>
             </div>
           </div>
-          <p class="text-danger">{{ errorMessage }}</p>
+          <p class="text-danger mx-auto">{{ errorMessage }}</p>
         </form>
       </section>
       <!-- Fin -->
@@ -121,7 +121,7 @@
             <div class="input-group-append mx-auto mb-4 col-12">
               <button type="submit" class="btn btn-danger mt-3 mx-auto font-weight-bold rounded" v-on:click="deleteProfile">Suppression définitive</button>
             </div>
-            <p class="text-danger">{{ errorMessage }}</p>
+            <p class="text-danger mx-auto">{{ errorMessage }}</p>
           </div>
         </form>
       </section>
@@ -228,6 +228,7 @@ export default {
     },
     updateAvatar(event) {
       const image = event.target.files[0];
+      console.log('image', image)
       const formData = new FormData();
       formData.append("image", image);
       this.$axios

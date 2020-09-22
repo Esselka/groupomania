@@ -25,9 +25,6 @@ exports.getUserDatas = (req, res) => {
 // Modification des données d'un utilisateur (email, username, password)
 exports.modifyUser = (req, res) => {
     const userID = res.locals.userID;
-    const email = req.body.email;
-    const username = req.body.username;
-    const password = req.body.password;
 
     // S'il y a une nouvelle image, doit supprimer l'ancienne et mettre à jour l'URI de la nouvelle
     if (req.file) {
@@ -45,30 +42,31 @@ exports.modifyUser = (req, res) => {
                 // Suppression de l'ancienne image
                 fs.unlink(`images/${filename}`, () => {
                     connection.query(modifyUserQuery, [avatarUrl, userID], function(err) {
-                        if (err) {
-                            return res.status(500).json(err.message);
-                        };
+                        // Gestion des erreurs
+                        if (err) return res.status(500).json(err.message);
+
                         return res.status(200).json({ message: "User modified !" });
                     });
                 })
             } else {
                 connection.query(modifyUserQuery, [avatarUrl, userID], function(err) {
-                    if (err) {
-                        return res.status(500).json(err.message);
-                    };
+                    // Gestion des erreurs
+                    if (err) return res.status(500).json(err.message);
+
                     return res.status(200).json({ message: "User modified !" });
                 });
             }
         });
     } else { // Pour tout autre modification que l'avatar, demande du MDP
+        const email = req.body.email;
+        const username = req.body.username;
+        const password = req.body.password;
+
         findUserQuery = "SELECT password FROM users WHERE userID = ?";
         connection.query(findUserQuery, [userID], function(err, result) {
-            if (err) {
-                return res.status(500).json(err.message);
-            }
-            if (result.length == 0) {
-                return res.status(401).json({ error: "User not found !" });
-            }
+            // Gestion des erreurs
+            if (err) return res.status(500).json(err.message);
+            if (result.length == 0) return res.status(401).json({ error: "User not found !" });
 
             const newPassword = req.body.new_password;
             const hashedPassword = result[0].password;
@@ -85,33 +83,29 @@ exports.modifyUser = (req, res) => {
                                 changePasswordQuery = "UPDATE users SET email = ?, username = ?, password = ? WHERE userID = ?";
                                 queryValues = [email, username, hash, userID];
                                 connection.query(changePasswordQuery, queryValues, function(err, result) {
-                                    if (err) {
-                                        return res.status(500).json(err.message);
-                                    }
-                                    if (result.affectedRows == 0) {
-                                        return res.status(400).json({ message: "Update failed !" });
-                                    }
+                                    // Gestion des erreurs
+                                    if (err) return res.status(500).json(err.message);
+                                    if (result.affectedRows == 0) return res.status(400).json({ message: "Update failed !" });
+
                                     return res.status(200).json({ message: "Update successfull !" });
                                 });
                             })
-                            .catch(e => res.status(500).json(e));
+                            .catch(err => res.status(500).json(err));
 
                         // Si le mdp reste le même
                     } else {
                         modifyUserQuery = "UPDATE users SET email = ?, username = ?, WHERE userID = ?";
                         queryValues = [email, username, userID];
                         connection.query(modifyUserQuery, queryValues, function(err, result) {
-                            if (err) {
-                                return res.status(500).json(err.message);
-                            }
-                            if (result.affectedRows == 0) {
-                                return res.status(400).json({ message: "Update failed !" });
-                            }
+                            // Gestion des erreurs
+                            if (err) return res.status(500).json(err.message);
+                            if (result.affectedRows == 0) return res.status(400).json({ message: "Update failed !" });
+
                             return res.status(200).json({ message: "Update successfull !" });
                         });
                     }
                 })
-                .catch(e => res.status(500).json(e));
+                .catch(err => res.status(500).json(err));
         });
     }
 };
