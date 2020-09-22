@@ -13,8 +13,8 @@
 </template>
 
 <script>
-import SigninPage from "@/components/SigninPage.vue";
-import SigninPageForm from "@/components/SigninPageForm.vue";
+import SigninPage from "../components/SigninPage.vue";
+import SigninPageForm from "../components/SigninPageForm.vue";
 
 export default {
   name: "Signin",

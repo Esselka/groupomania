@@ -208,11 +208,11 @@ export default {
       const username = this.userDatas.username;
       const password = document.getElementById("password").value;
       const newPassword = document.getElementById("newPassword").value;
-
+      let data;
       if (newPassword === "") {
-        const data = { email, username, password };
+        data = { email, username, password };
       } else {
-        const data = { email, username, password, newPassword };
+        data = { email, username, password, newPassword };
         }
         this.$axios
         .put("users/modifyUser", data)
