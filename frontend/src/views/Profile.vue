@@ -190,8 +190,9 @@ export default {
     deleteProfile() {
       // Supprime le compte de l'utilisateur
       const password = document.getElementById("confirmDeleteAccountPassword").value;
+
       this.$axios
-        .delete('users/delete', { data: { password: password } }) // TODO comment récupérer le pass côté backend
+        .post('users/delete', { data: { password: password } })
         .then(() => {
           sessionStorage.removeItem("token");
           delete this.$axios.defaults.headers.common["Authorization"];
@@ -201,8 +202,8 @@ export default {
           if (err.response.status === 401) {
             this.errorMessage = "Mot de passe incorrect !";
           }
-        });
-    },
+        }); 
+    }, 
     updateProfile() {
       const email = this.userDatas.email;
       const username = this.userDatas.username;

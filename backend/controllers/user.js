@@ -134,8 +134,7 @@ exports.getAvatarUrl = (req, res) => {
 // Suppression du compte utilisateur
 exports.deleteUser = (req, res) => {
     const userID = res.locals.userID;
-    const password = req.body.password;
-    console.log('password : ', password)
+    const password = req.body.data.password;
 
     const getUserPassQuery = `SELECT password, avatar_url FROM users WHERE user_id = ?`;
     connection.query(getUserPassQuery, [userID], function(err, result) {
