@@ -23,12 +23,13 @@
           <div class="custom-file mb-3">
             <input
               name="image"
+              id="imageLabel"
               type="file"
               class="custom-file-input"
               accept="image/x-png,image/gif,image/jpeg"
               v-on:change="updateAvatar($event)"
             />
-            <label class="custom-file-label" for="image">Choisir un avatar</label>
+            <label class="custom-file-label" for="imageLabel">Choisir un avatar</label>
           </div>
           <div class="input-group mb-3">
             <input
@@ -93,7 +94,7 @@
           alt="Avatar de l'utilisateur"
         />
         <h2 class="mt-1">{{ fullName }}</h2>
-        <p class="text-muted" aria-label="nom d'utilisateur" v-if="userDatas.username != null">Pseudo : {{ userDatas.username }}</p>
+        <p v-if="userDatas.username != null">Pseudo : {{ userDatas.username }}</p>
         <p>Total de vos posts : {{ userDatas.numberOfPosts }}</p>
         <p class="mt-4">{{ userDatas.dateInscription }}</p>
       </section>
@@ -158,8 +159,8 @@ export default {
     },
   },
   methods: {
+    // Gestion des erreurs
     createAlert(type, message) {
-      // Gestion des alertes
       const alert = this.$data.alert;
       this.connected = false;
       alert.type = type;
@@ -168,16 +169,17 @@ export default {
     getUserDatas() {
       // Récupère les infos de l'utilisateur
       this.$axios
-        .get(`users/${this.$route.params.userID}`)
+        .get('users/myDatas')
         .then((response) => {
           this.userDatas = response.data[0];
         })
         .catch((err) => {
           if (err.response.status === 401) {
-            this.createAlert("alert-danger mt-5", "Veuillez vous connecter");
-          }
-          if (err.response.status === 403) {
-            this.createAlert("alert-danger mt-5", "Accès interdit : ce n'est pas votre compte !");
+            this.createAlert("alert-danger mt-5", "Session expirée, veuillez vous reconnecter.");
+            // Retour à la page de login 4s après que le message de session expirée se soit affiché
+            setTimeout(() => {
+              this.$router.push({ name: "Signin" });
+            }, 4000);
           }
           if (err.response.status === 404) {
             this.createAlert("alert-warning mt-5", "Utilisateur non trouvé");
@@ -220,14 +222,16 @@ export default {
         .put("users/modifyUser", data)
         .then((response) => {
           if (response.status === 200) {
-            this.errorMessage = "Votre profil a été mis à jour";
+            this.errorMessage = "Votre profil a été mis à jour !";
           }
-          this.getUserDatas(); // Rafraîchit la page de profil
-          
+          this.$router.go(); // Rechargement de la page
         })
         .catch((err) => {
           if (err.response.status === 401) {
-            this.errorMessage = "Mot de passe incorrect";
+            this.errorMessage = "Mot de passe incorrect !";
+          }
+          if (err.response.status === 404) {
+            this.errorMessage = "Utilisateur inconnu !";
           }
           if (err.response.status === 500) {
             this.errorMessage = "Erreur serveur !";

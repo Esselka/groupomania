@@ -4,6 +4,7 @@ import Signin from '../views/Signin'
 import Signup from '../views/Signup'
 import MainPage from '../views/MainPage'
 import Profile from '../views/Profile'
+import CreatePost from '../views/CreatePost'
 
 Vue.use(VueRouter)
 
@@ -26,6 +27,11 @@ const routes = [{
         path: '/Profile',
         name: 'Profile',
         component: Profile
+    },
+    {
+        path: '/CreatePost',
+        name: 'CreatePost',
+        component: CreatePost
     },
 ]
 

@@ -5,11 +5,14 @@
 
     <nav class="navbar navbar bg-warning navbar-expand-sm rounded d-flex justify-content-between">
       <!-- Logo Groupomania -->
-      <h1 class="col-lg-3 col-md-5 col-6 navbar-brand w-25">
+      <h1 class="col-lg-3 col-md-4 col-5 navbar-brand w-25">
         <router-link to="/MainPage">
         <img class="img-fluid" alt="Groupomania" src="../assets/logo-black.png" role="link" />
         </router-link>
       </h1>
+      <!-- Fin -->
+      <!-- Bouton de création de nouveau post -->
+      <router-link class="btn-primary rounded p-2 font-weight-bold offset-lg-4 offset-md-2 col-md-3 col-4 col-lg-2" to="/CreatePost" tag="button">+ Créer post</router-link>
       <!-- Fin -->
     <button class="navbar-toggler navbar-light" type="button" data-toggle="collapse" data-target="#navbar-list" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>

@@ -8,7 +8,6 @@ const commentCtrl = require('../controllers/comment');
 
 // Gestion des posts
 router.post('/', auth, multer, postCtrl.createPost);
-router.get('/categories', auth, postCtrl.getCategories);
 router.get('/:slug', auth, postCtrl.getOnePost);
 router.put('/:slug', auth, postCtrl.modifyPost);
 router.delete('/:slug', auth, postCtrl.deletePost);

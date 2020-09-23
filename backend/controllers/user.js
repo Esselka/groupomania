@@ -5,10 +5,6 @@ const fs = require('fs');
 // Récupération des données utilisateur
 exports.getUserDatas = (req, res) => {
     const userID = res.locals.userID;
-    const userIDQueryDatas = req.params.userId;
-
-    // Vérification que l'utilisateur demande bien ses infos personnelles et non celles d'un autre utilisateur
-    if (userID != userIDQueryDatas) return res.status(403).json({ message: "Forbidden : not your account !" });
 
     const getUserDatasQuery = `SELECT user_id, firstname, lastname, username, email, avatar_url, DATE_FORMAT(register_date, 'Inscrit depuis le %e-%m-%Y à %H:%i') AS dateInscription,
     (SELECT COUNT(*) FROM posts WHERE user_id = ?) AS numberOfPosts
@@ -76,7 +72,7 @@ exports.modifyUser = (req, res) => {
     connection.query(findUserQuery, [userID], function(err, result) {
         // Gestion des erreurs
         if (err) return res.status(500).json(err.message);
-        if (result.length == 0) return res.status(401).json({ error: "User not found !" });
+        if (result.length == 0) return res.status(404).json({ error: "User not found !" });
 
         const newPassword = req.body.newPassword;
         const hashedPassword = result[0].password;

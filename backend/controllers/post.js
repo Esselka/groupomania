@@ -1,16 +1,15 @@
 const connection = require('../databaseConnection');
 const fs = require('fs');
-const makeSlug = require('../helpers/slug_creator').makeSlug();
+const slugCreator = require('../helpers/slug_creator');
 
 exports.createPost = (req, res) => {
     const userID = res.locals.userID;
     const title = req.body.title;
-    const category = req.body.category_id;
     const imageURL = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
-    const slug = makeSlug;
+    const slug = slugCreator.makeSlug();
 
-    let createPostQuery = 'INSERT INTO posts VALUES (NULL, ?, NOW(), ?, ?, ?, ?)';
-    let values = [userID, category, title, imageURL, slug];
+    let createPostQuery = 'INSERT INTO posts VALUES (NULL, ?, NOW(), ?, ?, ?)';
+    let values = [userID, title, imageURL, slug];
     connection.query(createPostQuery, values, function(err) {
         // Gestion des erreurs
         if (err) return res.status(500).json(err.message);
@@ -19,24 +18,11 @@ exports.createPost = (req, res) => {
     });
 };
 
-// Récupérer toutes les catégories de posts existantes
-exports.getCategories = (req, res) => {
-    let getCategoriesQuery = 'SELECT * FROM categories';
-
-    connection.query(getCategoriesQuery, function(err, result) {
-        // Gestion des erreurs
-        if (err) return res.status(500).json(err.message);
-        if (result.length == 0) return res.status(404).json({ message: "There is no category !" });
-        // Si aucune erreur, retourner la liste des catégories
-        return res.status(200).json(result);
-    });
-};
-
 // Récupération d'un post avec toutes les données nécessaires pour le front
 exports.getOnePost = (req, res) => {
     const slug = req.params.slug;
 
-    let getOnePostQuery = `SELECT posts.post_id, posts.user_id, DATE_FORMAT(posts.date, 'le %e-%m-%Y à %H:%i') AS dateCreation, category_id, title, image_url, slug, firstname, lastname, username, avatar_url,
+    let getOnePostQuery = `SELECT posts.post_id, posts.user_id, DATE_FORMAT(posts.date, 'le %e-%m-%Y à %H:%i') AS dateCreation, title, image_url, slug, firstname, lastname, username, avatar_url,
     (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='1' ) AS positiveVotes,
     (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='-1' ) AS negativeVotes
     FROM posts
@@ -63,7 +49,7 @@ exports.getOnePost = (req, res) => {
 // Obtention de tous les posts ainsi que des données nécessaires pour le front
 // TODO : trouver comment récupérer le total des commentaires car asynchrone
 exports.getAllPosts = (req, res) => {
-    let getAllPostsQuery = `SELECT posts.post_id, posts.user_id, DATE_FORMAT(posts.date, 'le %e-%m-%Y à %H:%i') AS dateCreation, category_id, title, image_url, slug, firstname, lastname, username, avatar_url,
+    let getAllPostsQuery = `SELECT posts.post_id, posts.user_id, DATE_FORMAT(posts.date, 'le %e-%m-%Y à %H:%i') AS dateCreation, title, image_url, slug, firstname, lastname, username, avatar_url,
     (SELECT COUNT(*) FROM comments WHERE comments.post_id=posts.post_id) AS commentsNumber,
     (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='1' ) AS positiveVotes,
     (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='-1' ) AS negativeVotes
@@ -83,7 +69,6 @@ exports.getAllPosts = (req, res) => {
 exports.modifyPost = (req, res) => {
     const userID = res.locals.userID;
     const slug = req.params.slug;
-    const category = req.body.category_id;
     const title = req.body.title;
 
     let checkOwnerQuery = 'SELECT user_id FROM posts WHERE slug = ?';
@@ -95,8 +80,8 @@ exports.modifyPost = (req, res) => {
             return res.status(403).json({ error: 'Forbidden : not the owner of the post !' });
         }
 
-        let modifyPostQuery = 'UPDATE posts SET category_id = ?, date = NOW(), title = ? WHERE slug = ?';
-        let values = [category, title, slug];
+        let modifyPostQuery = 'UPDATE posts SET date = NOW(), title = ? WHERE slug = ?';
+        let values = [title, slug];
         connection.query(modifyPostQuery, values, function(err, result) {
             // Gestion des erreurs
             if (err) return res.status(500).json(err.message);
