@@ -80,7 +80,7 @@
               >Mettre à jour</button>
             </div>
           </div>
-          <p class="text-danger mx-auto">{{ errorMessage }}</p>
+          <p class="text-danger mx-auto mt-3 font-weight-bold">{{ errorMessage }}</p>
         </form>
       </section>
       <!-- Fin -->
@@ -121,7 +121,7 @@
             <div class="input-group-append mx-auto mb-4 col-12">
               <button type="submit" class="btn btn-danger mt-3 mx-auto font-weight-bold rounded" v-on:click="deleteProfile">Suppression définitive</button>
             </div>
-            <p class="text-danger mx-auto">{{ errorMessage }}</p>
+            <p class="text-danger mx-auto mt-3 font-weight-bold">{{ errorMessage }}</p>
           </div>
         </form>
       </section>
@@ -183,7 +183,7 @@ export default {
             this.createAlert("alert-warning mt-5", "Utilisateur non trouvé");
           }
           if (err.response.status === 500) {
-            this.createAlert("alert-warning mt-5", "Erreur serveur");
+            this.createAlert("alert-warning mt-5", "Erreur serveur !");
           }
         });
     },
@@ -210,6 +210,7 @@ export default {
       const password = document.getElementById("password").value;
       const newPassword = document.getElementById("newPassword").value;
       let data;
+
       if (newPassword === "") {
         data = { email, username, password };
       } else {
@@ -217,22 +218,28 @@ export default {
         }
         this.$axios
         .put("users/modifyUser", data)
-        .then(() => {
-          this.$router.go(0); // Rafraîchit la page de profil
+        .then((response) => {
+          if (response.status === 200) {
+            this.errorMessage = "Votre profil a été mis à jour";
+          }
+          this.getUserDatas(); // Rafraîchit la page de profil
+          
         })
         .catch((err) => {
           if (err.response.status === 401) {
             this.errorMessage = "Mot de passe incorrect";
           }
+          if (err.response.status === 500) {
+            this.errorMessage = "Erreur serveur !";
+          }
         });
     },
     updateAvatar(event) {
       const image = event.target.files[0];
-      console.log('image', image)
       const formData = new FormData();
       formData.append("image", image);
       this.$axios
-        .put("users/modifyUser", formData)
+        .put("users/modifyAvatar", formData)
         .then(() => {
           this.getUserDatas(); // Rafraîchit l'url de l'avatar après mise à jour
         })
