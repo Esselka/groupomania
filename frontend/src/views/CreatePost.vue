@@ -2,10 +2,6 @@
 
 <template>
   <div>
-    <!-- Avertis si l'utilisateur n'est pas connecté -->
-    <InfoMessage v-if="!connected" :alertType="alert.type" :alertMessage="alert.message" />
-    <!-- Fin -->
-    <div v-else>
       <!-- Barre de navigation -->
       <NavBar />
       <!-- Fin -->
@@ -49,23 +45,19 @@
     <div id="preview">
       <img v-if="previewImage" :src="previewImage" alt="Visualisation de l'image actuelle" />
     </div>
-    </div>
   </div>
 </template>
 
 <script>
 import NavBar from "../components/NavBar";
-import InfoMessage from "../components/InfoMessage";
 
 export default {
   name: "CreatePost",
   components: {
-    NavBar,
-    InfoMessage
+    NavBar
   },
   data: () => {
     return {
-      connected: true, // Définit si l'utilisateur est connecté
       postCreatedMessage: "", // Message lors de la création d'un post
       previewImage: "", // Prévisualisation de l'image avant envoi
       alert: {

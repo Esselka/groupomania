@@ -33,7 +33,7 @@
           </div>
           <div class="input-group mb-3">
             <input
-              class="form-control"
+              class="form-control text-center"
               type="text"
               v-model="userDatas.username"
               name="username"
@@ -46,7 +46,7 @@
           </div>
           <div class="input-group mb-3">
             <input
-              class="form-control"
+              class="form-control text-center"
               type="email"
               v-model="userDatas.email"
               name="email"

@@ -12,7 +12,7 @@ router.get('/:slug', auth, postCtrl.getOnePost);
 router.put('/:slug', auth, postCtrl.modifyPost);
 router.delete('/:slug', auth, postCtrl.deletePost);
 router.get('/', auth, postCtrl.getAllPosts);
-router.put('/:slug/react', auth, postCtrl.reactToPost);
+router.post('/:postId/react', auth, postCtrl.reactToPost);
 
 // Gestion des commentaires
 router.post('/:postId/comments', auth, commentCtrl.createComment);
