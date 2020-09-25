@@ -1,4 +1,4 @@
-<!-- Page principale qui contient tous les posts, la création de post et les catégories-->
+<!-- Page qui affiche seulement un post en particulier avec ses commenaires -->
 
 <template>
   <div>
@@ -11,7 +11,7 @@
       <!-- Fin -->
       <!-- Post -->
       <Post
-        v-for="post in allPosts"
+        v-if="post"
         :key="post.id"
         :imageUrl="post.image_url"
         :title="post.title"
@@ -23,7 +23,6 @@
         :postID="post.post_id"
         :yourVote="post.yourVote"
         :avatarUrl="post.avatar_url"
-        :slug="post.slug"
         :dateCreation="post.dateCreation"
         @positive-vote="reactToPost(post.post_id, '1')"
         @negative-vote="reactToPost(post.post_id, '-1')"
@@ -40,21 +39,15 @@ import NavBar from "../components/NavBar";
 import Post from "../components/Post";
 
 export default {
-  name: "MainPage",
-  components: {
-    InfoMessage,
-    NavBar,
-    Post,
-  },
   data() {
     return {
-      connected: true, // Si l'utilisateur est connecté = true
+      connected: true, // Définit si l'utilisateur est connecté
       alert: {
         active: false, // L'alerte n'est pas visible par défaut
         type: "",
         message: "" // Message qui donne plus de précision sur l'alerte
       },
-      allPosts: [], // Stockage de tous les posts
+      post: [], // Stock le post ainsi que les commentaires liés à ce post
     }
   },
   methods: {
@@ -66,32 +59,11 @@ export default {
       alert.type = type;
       alert.message = message;
     },
-    getAllPosts() {
+    getOnePost() {
       this.$axios
-        .get("posts/")
-        .then((response) => {
-          this.allPosts = response.data.result;
-          console.log('Tous les posts : ', this.allPosts)
-        })
-        .catch((err) => {
-          if (err.response.status === 401) {
-            this.createAlert("alert-danger mt-5", "Session expirée, veuillez vous reconnecter.");
-            // Retour à la page de login 4s après que le message de session expirée se soit affiché
-            setTimeout(() => {
-              this.$router.push({ name: "Signin" });
-            }, 4000);
-          }
-          if (err.response.status === 500) {
-            this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
-          }
-        });
-    },
-    reactToPost(postID, voteValue) {
-      this.$axios
-      .post(`posts/${postID}/react`, { type: voteValue })
-      .then(() => {
-        this.$router.go(); // Rafraîchir les données à l'écran 
-        //this.getAllPosts(); // TODO voir pourquoi les données ne s'update pas
+      .get(`posts/${this.post.slug}`)
+      .then((response) => {
+        this.post = response.data;
       })
       .catch((err) => {
         if (err.response.status === 401) {
@@ -101,7 +73,10 @@ export default {
               this.$router.push({ name: "Signin" });
             }, 4000);
           }
-        if (err.response.status === 500) {
+          if (err.response.status === 404) {
+            this.createAlert("alert-danger mt-5", "Aucun post ne correspond à l'identifiant fournit.");
+          }
+          if (err.response.status === 500) {
             this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
           }
       });
@@ -109,8 +84,14 @@ export default {
     deletePost(slug) {
       this.$axios
       .delete(`posts/${slug}`)
-      .then(() => {
-        this.getAllPosts(); // Récupération de tous les posts après la suppression
+      .then((response) => {
+        if (response.status === 200) {
+          this.createAlert("alert-success mt-5", "Post supprimé avec succès !");
+          // Retour à la page principale 3s après que le message de supression du post se soit affiché
+          setTimeout(() => {
+            this.$router.push({ name: "MainPage" });
+          }, 3000);
+        }
       })
       .catch((err) => {
         if (err.response.status === 401) {
@@ -124,10 +105,26 @@ export default {
             this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
           }
       });
-    }
-  },
-  mounted() {
-    this.getAllPosts(); // Récupération de tous les posts avant affichage de la page
+    },
+    reactToPost(postID, voteValue) {
+      this.$axios
+      .post(`posts/${postID}/react`, { type: voteValue })
+      .then(() => {
+        this.$router.go(); // Rafraîchit la page
+      })
+      .catch((err) => {
+        if (err.response.status === 401) {
+            this.createAlert("alert-danger mt-5", "Session expirée, veuillez vous reconnecter.");
+            // Retour à la page de login 4s après que le message de session expirée se soit affiché
+            setTimeout(() => {
+              this.$router.push({ name: "Signin" });
+            }, 4000);
+          }
+        if (err.response.status === 500) {
+            this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+          }
+      });
+    },
   },
 }
 </script>

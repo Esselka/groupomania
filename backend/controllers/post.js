@@ -26,7 +26,8 @@ exports.getOnePost = (req, res) => {
     let getOnePostQuery = `SELECT posts.post_id, posts.user_id, DATE_FORMAT(posts.date, 'le %e-%m-%Y à %H:%i') AS dateCreation, title, image_url, slug, firstname, lastname, username, avatar_url,
     (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='1' ) AS positiveVotes,
     (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='-1' ) AS negativeVotes,
-    COUNT(CASE WHEN posts.user_id = ? then 1 else null end) AS postOwner
+    COUNT(CASE WHEN posts.user_id = ? then 1 else null end) AS postOwner,
+    SUM(CASE WHEN votes.user_id = ? AND votes.type = '1' then 1 WHEN votes.user_id = ? AND votes.type = '-1' then -1 else 0 end) AS yourVote
     FROM posts
     LEFT JOIN users ON posts.user_id = users.user_id
     WHERE slug = ?`;
@@ -60,7 +61,8 @@ exports.getAllPosts = (req, res) => {
     COUNT(CASE WHEN posts.user_id = ? then 1 else null end) AS postOwner,
     SUM(CASE WHEN votes.user_id = ? AND votes.type = '1' then 1 WHEN votes.user_id = ? AND votes.type = '-1' then -1 else 0 end) AS yourVote
     FROM posts
-    LEFT JOIN users ON posts.user_id = users.user_id LEFT JOIN votes ON posts.post_id = votes.post_id GROUP BY post_id`;
+    LEFT JOIN users ON posts.user_id = users.user_id LEFT JOIN votes ON posts.post_id = votes.post_id GROUP BY post_id
+    ORDER BY posts.date DESC`;
 
     connection.query(getAllPostsQuery, [userID, userID, userID], function(err, result) {
         // Gestion des erreurs

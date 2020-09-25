@@ -5,6 +5,7 @@ import Signup from '../views/Signup'
 import MainPage from '../views/MainPage'
 import Profile from '../views/Profile'
 import CreatePost from '../views/CreatePost'
+import PostID from '../views/PostID'
 
 Vue.use(VueRouter)
 
@@ -33,6 +34,11 @@ const routes = [{
         name: 'CreatePost',
         component: CreatePost
     },
+    {
+        path: '/post/:slug',
+        name: 'PostID',
+        component: PostID
+    }
 ]
 
 const router = new VueRouter({

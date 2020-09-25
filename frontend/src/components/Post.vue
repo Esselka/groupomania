@@ -4,10 +4,15 @@
   <article class="card mb-3 mx-auto">
     
     <div class="card-body">
-      <p class="text-left text-muted small"><img :src="avatarUrl" :alt="username" id="miniAvatar"> {{ username }}</p>
-      <p id="titre">{{ title }}</p>
-      <img :src="imageUrl" :alt="title" />
-      <p class="card-text text-left text-muted">{{ points }} points · {{ commentsNumber }} commentaires</p>
+      <p class="text-left text-muted small">
+        <img :src="avatarUrl" :alt="username" id="miniAvatar"> 
+        {{ username }} · Post créé {{ dateCreation }}
+      </p>
+      <div :class="cursor" type="button" @click="goToPost(slug)">
+        <p id="titre">{{ title }}</p>
+        <img :src="imageUrl" :alt="title" />
+      </div>
+      <p class="card-text text-left text-muted mt-2">{{ points }} points · {{ commentsNumber }} commentaires</p>
       <div class="d-flex justify-content-center">
         <div class="col-md-3 text-left">
           <!-- Bouton like -->
@@ -50,10 +55,11 @@
 
 <script>
 export default {
-  props: ["imageUrl", "title", "positiveVotes", "negativeVotes", "commentsNumber", "postOwner", "username", "postID", "yourVote", "avatarUrl", "slug"],
+  props: ["imageUrl", "title", "positiveVotes", "negativeVotes", "commentsNumber", "postOwner", "username", "postID", "yourVote", "avatarUrl", "slug", "dateCreation"],
   data() {
     return {
-      points: this.positiveVotes - this.negativeVotes,
+      cursor: "pointer", // Change le curseur selon que l'on est dans la page principale ou bien dans un post spécifique
+      points: this.positiveVotes - this.negativeVotes, // Compte le nombre de points : Likes - Dislikes
       postLiked: "", // pour gérer la couleur sur un like
       postDisliked: "", // pour gérer la couleur sur un dislike
     }
@@ -82,14 +88,23 @@ export default {
       if (this.postOwner > 0) {
         this.$emit("delete-post");
       }
-    }
-  },
-  computed: {
-    
+    },
+    goToPost(slug) {
+      // Route vers un post spécifique et ses commentaires
+      if (slug) {
+        this.$router.push({ name: "PostID", params: { slug: slug } });
+      }
+    },
   },
   mounted() {
     // Permet d'afficher visuellement la couleur du vote de l'utilisateur : bleu = like, rouge = dislike, noir = pas encore voté
     this.visualVotes();
+    // Mise à jour du curseur quand on passe sur l'image du post selon la page dans laquelle on se trouve
+    if (this.$route.name === "MainPage") {
+      this.cursor = "pointer";
+    } else {
+      this.cursor = "default";
+    }
   },
 }
 </script>
