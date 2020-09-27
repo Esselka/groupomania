@@ -47,8 +47,10 @@ exports.getOnePost = (req, res) => {
             if (result.length == 0) return res.status(404).json({ message: "This post doesn't exists !" });
 
             // Récupération des commentaires liés à ce post
-            let commentsQuery = 'SELECT * from comments WHERE post_id = ? order by date DESC';
-            connection.query(commentsQuery, [result[0].post_id], function(error, commentsResult) {
+            let getCommentsQuery = `SELECT firstname, lastname, username, avatar_url, comments.text, DATE_FORMAT(comments.date, 'le %e-%m-%Y à %H:%i') AS commentCreationDate
+            FROM users LEFT JOIN comments ON users.user_id = comments.user_id
+            WHERE post_id = ? order by comments.date DESC`;
+            connection.query(getCommentsQuery, [result[0].post_id], function(error, commentsResult) {
                 if (error) return res.status(500).json(error.message);
                 // Retourne un objet contenant les données du post et les commentaires
                 return res.status(200).json({

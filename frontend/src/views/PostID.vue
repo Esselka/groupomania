@@ -23,13 +23,13 @@
         <template v-slot:createComment>
           <CreateComment
             @comment-sent="setCommentText"
-            v-if="showCommentSection && currentPostID === post[0].post_id"
+            v-if="showCommentSection"
           >
             <button
               class="col-3 btn btn-warning form-control text-center mt-2"
               type="submit"
               @click.prevent="postComment(post[0].post_id)"
-            >Publier
+            >Poster
             </button>
           </CreateComment>
           <InfoMessage
@@ -50,6 +50,7 @@ import InfoMessage from "../components/InfoMessage";
 import NavBar from "../components/NavBar";
 import Post from "../components/Post";
 import CreateComment from "../components/CreateComment";
+import Comment from "../components/Comment";
 
 export default {
   name: "PostID",
@@ -58,6 +59,7 @@ export default {
     NavBar,
     Post,
     CreateComment,
+    Comment
   },
   data() {
     return {
@@ -68,7 +70,7 @@ export default {
         message: "" // Message qui donne plus de précision sur l'alerte
       },
       post: [false], // Stock le post ainsi que les commentaires liés à ce post
-      showCommentSection: false, // Ne pas montrer la section commentaire par défaut
+      showCommentSection: true, // Montrer la section commentaire par défaut
       commentText: "", // Sauvegarde du texte du commentaire avant envoi
       currentPostID: "" // Stock le postID actuel pour la gestion des commentaires pour chaque post
     }
