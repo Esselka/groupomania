@@ -2,44 +2,60 @@
 
 <template>
   <article class="card mb-3 mx-auto">
-    
+    <!-- Utilisation d'une carte de Bootstrap -->
     <div class="card-body">
       <p class="text-left text-muted small">
-        <img :src="avatarUrl" :alt="username" id="miniAvatar"> 
-        {{ username }} · Post créé {{ dateCreation }}
+        <img :src="post.avatar_url" :alt="post.username" id="miniAvatar"> 
+        {{ post.username }} · Post créé {{ post.dateCreation }}
       </p>
-      <div :class="cursor" type="button" @click="goToPost(slug)">
-        <p id="titre">{{ title }}</p>
-        <img :src="imageUrl" :alt="title" />
+      <!-- L'image du post est cliquable si on se situe sur la page principale -->
+      <div v-if="this.$route.name === 'MainPage'" :class="cursor" type="button" @click="goToPost(post.slug)">
+        <p id="titre">{{ post.title }}</p>
+        <img :src="post.image_url" :alt="post.title" />
       </div>
-      <p class="card-text text-left text-muted mt-2">{{ points }} points · {{ commentsNumber }} commentaires</p>
+      <!-- Fin -->
+      <!-- L'image du post n'est pas cliquable si on se situe sur la page PostID -->
+      <div v-if="this.$route.name === 'PostID'">
+        <p id="titre">{{ post.title }}</p>
+        <img :src="post.image_url" :alt="post.title" />
+      </div>
+      <!-- Fin -->
+      <p class="card-text text-left text-muted mt-2">{{ this.getPoints }} points · {{ post.commentsNumber }} commentaires</p>
+      <!-- <p class="text-danger font-weight-bold">{{ post }}</p> -->
       <div class="d-flex justify-content-center">
         <div class="col-md-3 text-left">
           <!-- Bouton like -->
           <i 
           type="button" 
-          class="fas fa-thumbs-up mx-3 fa-lg"
+          class="fas fa-thumbs-up fa-lg"
           aria-hidden="true"
           title="J'aime le post"
           :class="postLiked"
-          @click="sendVote(postID, 1)"
+          @click="sendVote(1)"
           ></i>
           <!-- Fin -->
           <!-- Bouton dislike -->
           <i 
           type="button" 
-          class="fas fa-thumbs-down fa-lg"
+          class="fas fa-thumbs-down mx-3 fa-lg"
           aria-hidden="true"
           title="Je n'aime pas le post"
           :class="postDisliked"
-          @click="sendVote(postID, -1)"
+          @click="sendVote(-1)"
+          ></i>
+          <i 
+          type="button"
+          class="far fa-comment-alt fa-lg mx-3"
+          aria-hidden="true"
+          title="Laisser un commentaire"
+          @click="toggleCommentSection"
           ></i>
           <!-- Fin -->
         </div>
-        <div class="col-md-9  text-right text-secondary">
+        <div class="col-md-9 text-right text-secondary">
           <!-- Bouton suppression du post -->
           <i
-          v-if="postOwner > 0"
+          v-if="post.postOwner > 0"
           type="button"
           class="fas fa-trash fa-lg"
           aria-hidden="true"
@@ -49,25 +65,32 @@
           <!-- Fin -->
         </div>
       </div>
+      <!-- Espace de création de commentaire -->
+        <div class="row">
+          <div class="col-12">
+            <slot name="createComment"></slot>
+          </div>
+        </div>
+      <!-- Fin -->
     </div>
+    <!-- Fin -->
 </article>
 </template>
 
 <script>
 export default {
-  props: ["imageUrl", "title", "positiveVotes", "negativeVotes", "commentsNumber", "postOwner", "username", "postID", "yourVote", "avatarUrl", "slug", "dateCreation"],
+  props: ["post", "thisPostComments"],
   data() {
     return {
       cursor: "pointer", // Change le curseur selon que l'on est dans la page principale ou bien dans un post spécifique
-      points: this.positiveVotes - this.negativeVotes, // Compte le nombre de points : Likes - Dislikes
-      postLiked: "", // pour gérer la couleur sur un like
-      postDisliked: "", // pour gérer la couleur sur un dislike
+      postLiked: "", // Pour gérer la couleur sur un like
+      postDisliked: "", // Pour gérer la couleur sur un dislike
     }
   },
   methods: {
     // Envoi des like/dislike au parent pour les posts
-    sendVote(postID, voteValue) {
-      if(this.yourVote != voteValue) {// Si l'utilisateur a fait le même vote, ne rien faire
+    sendVote(voteValue) {
+      if(this.post.yourVote != voteValue) {// Si l'utilisateur a fait le même vote, ne rien faire
         if(voteValue == 1) {
           this.$emit("positive-vote");
           } else
@@ -75,17 +98,17 @@ export default {
       }
     },
     visualVotes() {
-      if (this.yourVote == 1) {
+      if (this.post.yourVote == 1) {
         this.postDisliked = ""; // Mettre la couleur du pouce négatif par défaut
         this.postLiked = "text-primary"; // Le pouce devient bleu sur un like
       }
-      if (this.yourVote == -1) {
+      if (this.post.yourVote == -1) {
         this.postLiked = ""; // Mettre la couleur du pouce positif par défaut
         this.postDisliked = "text-danger"; // Le pouce devient rouge sur un dislike
       }
     },
     deletePost() { // Suppression d'un post
-      if (this.postOwner > 0) {
+      if (this.post.postOwner > 0) {
         this.$emit("delete-post");
       }
     },
@@ -94,6 +117,14 @@ export default {
       if (slug) {
         this.$router.push({ name: "PostID", params: { slug: slug } });
       }
+    },
+    toggleCommentSection() {
+      this.$emit("toggle-comment-section")
+    },
+  },
+  computed: {
+    getPoints() { // Compte le nombre de points : Likes - Dislikes
+      return this.post.positiveVotes - this.post.negativeVotes;
     },
   },
   mounted() {
@@ -105,6 +136,10 @@ export default {
     } else {
       this.cursor = "default";
     }
+  },
+  updated() { // Les données qui doivent être mise à jour lors de nouvelles données reçu
+    this.visualVotes();
+    this.points = this.post.positiveVotes - this.post.negativeVotes;
   },
 }
 </script>

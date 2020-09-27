@@ -141,13 +141,6 @@ exports.deleteUser = (req, res) => {
         if (err) return res.status(500).json(err.message);
         if (result.length == 0) return res.status(404).json({ error: "User not found !" });
 
-        const filename = result[0].avatar_url.split("/images/")[1];
-        if (filename !== "defaultPic.png") {
-            // Suppression de l'image
-            fs.unlink(`images/${filename}`, (err) => {
-                if (err) console.error(err);
-            });
-        };
         const hashedPassword = result[0].password;
 
         bcrypt.compare(password, hashedPassword)
@@ -156,10 +149,18 @@ exports.deleteUser = (req, res) => {
                     return res.status(401).json({ error: "Incorrect login informations !" });
                 }
                 const deleteUserQuery = "DELETE FROM users WHERE user_id = ?";
-                connection.query(deleteUserQuery, [userID], function(err, result) {
+                connection.query(deleteUserQuery, [userID], function(err, resultDelete) {
                     // Gestion des erreurs
                     if (err) return res.status(500).json(err.message);
-                    if (result.affectedRows == 0) return res.status(400).json({ message: "Account deletion failed !" });
+                    if (resultDelete.affectedRows == 0) return res.status(400).json({ message: "Account deletion failed !" });
+
+                    // Suppression du fichier de l'avatar de l'utilisateur
+                    const filename = result[0].avatar_url.split("/images/")[1];
+                    if (filename !== "defaultPic.png") {
+                        fs.unlink(`images/${filename}`, (err) => {
+                            if (err) console.error(err);
+                        });
+                    };
 
                     res.status(200).json({ message: "User deleted !" });
                 });

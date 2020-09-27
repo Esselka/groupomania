@@ -104,6 +104,9 @@ export default {
           }
           if (err.response.status === 500) {
             this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+            setTimeout(() => {
+              this.$router.go();
+            }, 4000);
           }
         });
       }

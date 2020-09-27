@@ -50,6 +50,9 @@ export default {
           }
           if (err.response.status === 500) {
             this.message = "Une erreur est survenue sur le serveur, veuillez réessayer plus tard.";
+            setTimeout(() => {
+              this.$router.go();
+            }, 4000);
           }
           // Suppression du token en cas d'erreur
           sessionStorage.removeItem("token");

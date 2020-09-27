@@ -183,9 +183,16 @@ export default {
           }
           if (err.response.status === 404) {
             this.createAlert("alert-warning mt-5", "Utilisateur non trouvé");
+            // Retour à la page de login 3s après que le message se soit affiché
+            setTimeout(() => {
+              this.$router.push({ name: "Signin" });
+            }, 3000);
           }
           if (err.response.status === 500) {
             this.createAlert("alert-warning mt-5", "Erreur serveur !");
+            setTimeout(() => {
+              this.$router.go();
+            }, 4000);
           }
         });
     },
@@ -235,6 +242,9 @@ export default {
           }
           if (err.response.status === 500) {
             this.errorMessage = "Erreur serveur !";
+            setTimeout(() => {
+              this.$router.go();
+            }, 4000);
           }
         });
     },
@@ -259,7 +269,7 @@ export default {
   },
   watch: {
     // Actualisation de la page de profil en cas de clic sur "Mon profile"
-    "$route.params.id": function () {
+    "$route.params.userID": function () {
       this.getUserDatas();
     },
   },

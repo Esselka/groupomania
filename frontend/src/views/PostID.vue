@@ -12,22 +12,34 @@
       <!-- Post -->
       <Post
         v-if="post"
-        :key="post.id"
-        :imageUrl="post.image_url"
-        :title="post.title"
-        :positiveVotes="post.positiveVotes"
-        :negativeVotes="post.negativeVotes"
-        :commentsNumber="post.commentsNumber"
-        :postOwner="post.postOwner"
-        :username="post.username"
-        :postID="post.post_id"
-        :yourVote="post.yourVote"
-        :avatarUrl="post.avatar_url"
-        :dateCreation="post.dateCreation"
-        @positive-vote="reactToPost(post.post_id, '1')"
-        @negative-vote="reactToPost(post.post_id, '-1')"
-        @delete-post="deletePost(post.slug)"
-      />
+        :post="post[0]"
+        :thisPostComments="post[0].commentsResult"
+        @positive-vote="reactToPost(post[0].post_id, '1')"
+        @negative-vote="reactToPost(post[0].post_id, '-1')"
+        @delete-post="deletePost(post[0].slug)"
+        @toggle-comment-section="toggleShowCommentSection(post[0].post_id)"
+      >
+      <!-- Espace commentaire -->
+        <template v-slot:createComment>
+          <CreateComment
+            @comment-sent="setCommentText"
+            v-if="showCommentSection && currentPostID === post[0].post_id"
+          >
+            <button
+              class="col-3 btn btn-warning form-control text-center mt-2"
+              type="submit"
+              @click.prevent="postComment(post[0].post_id)"
+            >Publier
+            </button>
+          </CreateComment>
+          <InfoMessage
+            v-if="alert.active && alert.activeComment && currentPostID === post[0].post_id"
+            :alertType="alert.type"
+            :alertMessage="alert.message"
+          />
+        </template>
+        <!-- Fin -->
+      </Post>
       <!-- Fin -->
     </div>
   </div>
@@ -37,8 +49,16 @@
 import InfoMessage from "../components/InfoMessage";
 import NavBar from "../components/NavBar";
 import Post from "../components/Post";
+import CreateComment from "../components/CreateComment";
 
 export default {
+  name: "PostID",
+  components: {
+    InfoMessage,
+    NavBar,
+    Post,
+    CreateComment,
+  },
   data() {
     return {
       connected: true, // Définit si l'utilisateur est connecté
@@ -47,7 +67,10 @@ export default {
         type: "",
         message: "" // Message qui donne plus de précision sur l'alerte
       },
-      post: [], // Stock le post ainsi que les commentaires liés à ce post
+      post: [false], // Stock le post ainsi que les commentaires liés à ce post
+      showCommentSection: false, // Ne pas montrer la section commentaire par défaut
+      commentText: "", // Sauvegarde du texte du commentaire avant envoi
+      currentPostID: "" // Stock le postID actuel pour la gestion des commentaires pour chaque post
     }
   },
   methods: {
@@ -59,9 +82,23 @@ export default {
       alert.type = type;
       alert.message = message;
     },
-    getOnePost() {
+    commentAlert(type, message) {
+      // Crée une alerte pendant 4 secondes
+      const dataAlert = this.$data.alert;
+      dataAlert.active = true;
+      dataAlert.type = type;
+      dataAlert.message = message;
+      setTimeout(() => {
+        dataAlert.active = false;
+        dataAlert.activeComment = false;
+        dataAlert.type = "";
+        dataAlert.message = "";
+      }, 4000);
+        this.getOnePost(this.$route.params.slug); // Rafraîchit le nombre de commentaires
+    },
+    getOnePost(slug) {
       this.$axios
-      .get(`posts/${this.post.slug}`)
+      .get(`posts/${slug}`)
       .then((response) => {
         this.post = response.data;
       })
@@ -78,6 +115,9 @@ export default {
           }
           if (err.response.status === 500) {
             this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+            setTimeout(() => {
+              this.$router.go();
+            }, 4000);
           }
       });
     },
@@ -103,6 +143,9 @@ export default {
           }
         if (err.response.status === 500) {
             this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+            setTimeout(() => {
+              this.$router.go();
+            }, 4000);
           }
       });
     },
@@ -110,7 +153,7 @@ export default {
       this.$axios
       .post(`posts/${postID}/react`, { type: voteValue })
       .then(() => {
-        this.$router.go(); // Rafraîchit la page
+        this.getOnePost(this.$route.params.slug); // Rafraîchit les données à l'écran
       })
       .catch((err) => {
         if (err.response.status === 401) {
@@ -122,9 +165,56 @@ export default {
           }
         if (err.response.status === 500) {
             this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+            setTimeout(() => {
+              this.$router.go();
+            }, 4000);
           }
       });
     },
+    setCommentText(text) {
+      this.commentText = text; // Stockage du texte du commentaire avant envoi
+    },
+    postComment(postID) {
+      const formValid = document
+        .getElementsByName("formComment")[0]
+        .checkValidity();
+      if (formValid) {
+        this.$axios
+        .post(`posts/${postID}/comments`, { text: this.commentText })
+        .then(() => {
+          this.showCommentSection = false;
+          this.alert.activeComment = true;
+          this.commentAlert("alert-success mt-1", "Commentaire publié !");
+        })
+        .catch((err) => {
+          if (err.response.status === 401) {
+            this.createAlert("alert-danger mt-5", "Session expirée, veuillez vous reconnecter.");
+            // Retour à la page de login 4s après que le message de session expirée se soit affiché
+            setTimeout(() => {
+              this.$router.push({ name: "Signin" });
+            }, 4000);
+          }
+          if (err.response.status === 500) {
+            this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+            setTimeout(() => {
+              this.$router.go();
+            }, 4000);
+          }
+        });
+      }
+    },
+    toggleShowCommentSection(postID) { // Montrer/Cacher l'espace de création d'un commentaire
+      if (this.showCommentSection) {
+        this.currentPostID = postID;
+        this.showCommentSection = false;
+      } else {
+        this.currentPostID = postID;
+        this.showCommentSection = true;
+      }
+    },
+  },
+  mounted() {
+    this.getOnePost(this.$route.params.slug)
   },
 }
 </script>

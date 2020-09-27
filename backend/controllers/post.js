@@ -23,34 +23,44 @@ exports.getOnePost = (req, res) => {
     const userID = res.locals.userID;
     const slug = req.params.slug;
 
-    let getOnePostQuery = `SELECT posts.post_id, posts.user_id, DATE_FORMAT(posts.date, 'le %e-%m-%Y à %H:%i') AS dateCreation, title, image_url, slug, firstname, lastname, username, avatar_url,
-    (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='1' ) AS positiveVotes,
-    (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='-1' ) AS negativeVotes,
-    COUNT(CASE WHEN posts.user_id = ? then 1 else null end) AS postOwner,
-    SUM(CASE WHEN votes.user_id = ? AND votes.type = '1' then 1 WHEN votes.user_id = ? AND votes.type = '-1' then -1 else 0 end) AS yourVote
-    FROM posts
-    LEFT JOIN users ON posts.user_id = users.user_id
-    WHERE slug = ?`;
-    connection.query(getOnePostQuery, [slug, userID], function(err, result) {
+    let getPostIdFromSlugQuery = `SELECT post_id FROM posts WHERE slug = ?`;
+    connection.query(getPostIdFromSlugQuery, [slug], function(err, resultPostID) {
         // Gestion des erreurs
         if (err) return res.status(500).json(err.message);
-        if (result.length == 0) return res.status(404).json({ message: "This post doesn't exists !" });
+        if (resultPostID.length == 0) return res.status(404).json({ message: "This slug doesn't exists !" });
 
-        // Récupération des commentaires liés à ce post
-        let commentsQuery = 'SELECT * from comments WHERE post_id = ? order by date DESC';
-        connection.query(commentsQuery, [result[0].post_id], function(error, commentsResult) {
-            if (error) return res.status(500).json(error.message);
-            // Retourne un objet contenant les données du post et les commentaires
-            return res.status(200).json({
-                ...result,
-                commentsResult,
+        const postID = resultPostID[0].post_id;
+
+        let getOnePostQuery = `SELECT posts.post_id, posts.user_id, DATE_FORMAT(posts.date, 'le %e-%m-%Y à %H:%i') AS dateCreation, title, image_url, slug, firstname, lastname, username, avatar_url,
+        (SELECT COUNT(*) FROM comments WHERE comments.post_id=posts.post_id) AS commentsNumber,
+        (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='1' ) AS positiveVotes,
+        (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='-1' ) AS negativeVotes,
+        (SELECT type FROM votes WHERE post_id = ? AND user_id = ? ) AS yourVote,
+        COUNT(CASE WHEN posts.user_id = ? then 1 else null end) AS postOwner
+        FROM posts
+        LEFT JOIN users ON posts.user_id = users.user_id
+        LEFT JOIN votes ON posts.user_id = votes.user_id
+        WHERE slug = ?`;
+        connection.query(getOnePostQuery, [postID, userID, userID, slug], function(err, result) {
+            // Gestion des erreurs
+            if (err) return res.status(500).json(err.message);
+            if (result.length == 0) return res.status(404).json({ message: "This post doesn't exists !" });
+
+            // Récupération des commentaires liés à ce post
+            let commentsQuery = 'SELECT * from comments WHERE post_id = ? order by date DESC';
+            connection.query(commentsQuery, [result[0].post_id], function(error, commentsResult) {
+                if (error) return res.status(500).json(error.message);
+                // Retourne un objet contenant les données du post et les commentaires
+                return res.status(200).json({
+                    ...result,
+                    commentsResult,
+                });
             });
         });
     });
 };
 
 // Obtention de tous les posts ainsi que des données nécessaires pour le front
-// TODO : trouver comment récupérer le total des commentaires car asynchrone
 exports.getAllPosts = (req, res) => {
     const userID = res.locals.userID;
 
@@ -61,7 +71,9 @@ exports.getAllPosts = (req, res) => {
     COUNT(CASE WHEN posts.user_id = ? then 1 else null end) AS postOwner,
     SUM(CASE WHEN votes.user_id = ? AND votes.type = '1' then 1 WHEN votes.user_id = ? AND votes.type = '-1' then -1 else 0 end) AS yourVote
     FROM posts
-    LEFT JOIN users ON posts.user_id = users.user_id LEFT JOIN votes ON posts.post_id = votes.post_id GROUP BY post_id
+    LEFT JOIN users ON posts.user_id = users.user_id 
+    LEFT JOIN votes ON posts.post_id = votes.post_id 
+    GROUP BY post_id
     ORDER BY posts.date DESC`;
 
     connection.query(getAllPostsQuery, [userID, userID, userID], function(err, result) {
@@ -123,28 +135,18 @@ exports.deletePost = (req, res) => {
             // Suppression de l'image
             fs.unlink(`images/${filename}`, () => {
                 // Suppression des votes et du post une fois l'image locale effacée
-                let deleteThisPostVotesQuery = "DELETE FROM votes WHERE post_id = ?";
-                connection.query(deleteThisPostVotesQuery, [postID], function(err) {
-                    if (err) return res.status(500).json(err.message);
-
-                    let deletePostQuery = 'DELETE FROM posts WHERE slug = ?';
-                    connection.query(deletePostQuery, [slug], function(err) {
-                        if (err) return res.status(500).json(err.message);
-                        return res.status(200).json({ message: 'Post deleted !' });
-                    });
-                });
-            });
-            // S'il n'y a pas d'image à supprimer localement, suppression du post    
-        } else {
-            let deleteThisPostVotesQuery = "DELETE FROM votes WHERE post_id = ?";
-            connection.query(deleteThisPostVotesQuery, [postID], function(err) {
-                if (err) return res.status(500).json(err.message);
-
                 let deletePostQuery = 'DELETE FROM posts WHERE slug = ?';
                 connection.query(deletePostQuery, [slug], function(err) {
                     if (err) return res.status(500).json(err.message);
                     return res.status(200).json({ message: 'Post deleted !' });
                 });
+            });
+            // S'il n'y a pas d'image à supprimer localement, suppression du post    
+        } else {
+            let deletePostQuery = 'DELETE FROM posts WHERE slug = ?';
+            connection.query(deletePostQuery, [slug], function(err) {
+                if (err) return res.status(500).json(err.message);
+                return res.status(200).json({ message: 'Post deleted !' });
             });
         }
         if (err) return res.status(500).json(err.message);

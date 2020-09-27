@@ -68,6 +68,9 @@ export default {
         .catch((err) => {
           if (err.response.status === 500) {
             this.message = "Une erreur est survenue sur le serveur, veuillez réessayer plus tard.";
+            setTimeout(() => {
+              this.$router.go();
+            }, 4000);
           }
           sessionStorage.removeItem("token");
         });

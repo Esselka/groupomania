@@ -5,18 +5,18 @@
     <!-- Texte du commentaire -->
     <textarea
       name="comment"
-      class="form-control"
-      cols="130"
+      class="form-control mt-3"
+      cols="100"
       rows="2"
       maxlength="200"
       required
-      placeholder="Créer un commentaire"
+      placeholder="Créer un commentaire (200 caractères max)"
       aria-label="Ecrire un commentaire"
       v-model="commentText"
       @input="sendComment"
     ></textarea>
     <!-- Fin -->
-    <!-- Bouton pour le publier -->
+    <!-- Bouton de publication du commentaire -->
     <slot></slot>
     <!-- fin -->
   </form>

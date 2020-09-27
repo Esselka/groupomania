@@ -4,7 +4,6 @@
 <template>
   <!-- alertType étant ici le type d'alerte qui va être utilisé dans Bootstrap, exp : alert-danger -->
   <div>
-    <NavBar />
     <div class="alert" :class="alertType" role="alert">
       {{ alertMessage }}
     </div>
@@ -12,11 +11,8 @@
 </template>
 
 <script>
-import NavBar from './NavBar';
-
 export default {
   name: "InfoMessage",
-  components: { NavBar },
   props: ['alertType', 'alertMessage'], // Envoi au parent qui traite les props
 };
 </script>
