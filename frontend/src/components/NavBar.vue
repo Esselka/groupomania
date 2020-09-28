@@ -3,7 +3,7 @@
 <template>
   <header class="mb-1 mb-md-3">
 
-    <nav class="navbar navbar bg-warning navbar-expand-sm rounded d-flex justify-content-between">
+    <nav class="navbar navbar navbar-expand-sm rounded d-flex justify-content-between" style="background: #FD2D01;">
       <!-- Logo Groupomania -->
       <h1 class="col-lg-3 col-md-4 col-5 navbar-brand w-25">
         <router-link to="/MainPage">

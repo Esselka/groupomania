@@ -14,6 +14,7 @@
         v-for="post in allPosts"
         :key="post.post_id"
         :post="post"
+        :isAdmin="isAdmin"
         @positive-vote="reactToPost(post.post_id, '1')"
         @negative-vote="reactToPost(post.post_id, '-1')"
         @delete-post="deletePost(post.slug)"
@@ -26,7 +27,8 @@
             v-if="showCommentSection && currentPostID === post.post_id"
           >
             <button
-              class="col-3 btn btn-warning form-control text-center mt-2"
+              class="col-3 form-control text-white text-center mt-2 mx-auto"
+              style="background: #FD2D01;"
               type="submit"
               @click.prevent="postComment(post.post_id)"
             >Publier
@@ -71,7 +73,8 @@ export default {
       allPosts: [], // Stockage de tous les posts
       showCommentSection: false, // Ne pas montrer la section commentaire par défaut
       commentText: "", // Sauvegarde du texte du commentaire avant envoi
-      currentPostID: "" // Stock le postID actuel pour la gestion des commentaires pour chaque post
+      currentPostID: "", // Stock le postID actuel pour la gestion des commentaires pour chaque post
+      isAdmin: false, // Un utilisateur est-il admin ? false par défaut
     }
   },
   methods: {
@@ -204,9 +207,39 @@ export default {
         this.showCommentSection = true;
       }
     },
+    getUserRole() {
+      this.$axios
+      .get('/users/currentUserRole')
+      .then((response) => {
+        this.isAdmin = response.data.role === 'admin';
+      })
+      .catch((err) => {
+        if (err.response.status === 401) {
+          this.createAlert("alert-danger mt-5", "Session expirée, veuillez vous reconnecter.");
+          // Retour à la page de login 4s après que le message de session expirée se soit affiché
+          setTimeout(() => {
+            this.$router.push({ name: "Signin" });
+          }, 4000);
+        }
+        if (err.response.status === 404) {
+          this.createAlert("alert-danger mt-5", "L'utilisateur n'existe pas.");
+          // Rafrâichit la page 4s après l'affichage du message d'erreur
+          setTimeout(() => {
+            this.$router.go();
+          }, 4000);
+        }
+        if (err.response.status === 500) {
+          this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+          setTimeout(() => {
+            this.$router.go();
+          }, 4000);
+        }
+      })
+    },
   },
   mounted() {
     this.getAllPosts(); // Récupération de tous les posts avant affichage de la page
+    this.getUserRole(); // Récupère le role de l'utilisateur pour lui donner ou non des des droits d'admin
     document.title = 'Groupomania | Le réseau social de votre entreprise'; // Définit le titre de la page
   },
 }

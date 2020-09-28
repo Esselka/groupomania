@@ -22,8 +22,8 @@ exports.signup = (req, res) => {
         bcrypt.hash(req.body.password, 10)
             // Création d'un nouvel utilisateur et enregistrement dans la BDD
             .then((hash) => {
-                let signupQuery = `INSERT INTO users VALUES(NULL, ?, ?, ?, ?, ?, avatar_url, NOW())`;
-                let queryValues = [firstName, lastName, username, email, hash];
+                let signupQuery = `INSERT INTO users VALUES(NULL, ?, ?, ?, ?, ?, avatar_url, NOW(), ?)`;
+                let queryValues = [firstName, lastName, username, email, hash, "contributor"];
 
                 connection.query(signupQuery, queryValues, function(err) {
                     if (err) {

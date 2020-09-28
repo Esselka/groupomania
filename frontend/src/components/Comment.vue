@@ -8,7 +8,7 @@
       </div>
       <div class="mx-1">
         <div class="text-left mx-2">
-          <div class="small mb-2">
+          <div class="mb-2">
             {{ commentDatas.firstname }} <span class="font-weight-bold">'{{ commentDatas.username }}'</span> {{ commentDatas.lastname }} · <span class="text-muted">{{ commentDatas.commentCreationDate }}</span>
           </div>
         {{ commentDatas.text }}
@@ -19,7 +19,7 @@
     <div class="col-12 text-right">
       <!-- Bouton édition du commentaire -->
       <i
-      v-if="commentDatas.commentOwner === 1"
+      v-if="commentDatas.commentOwner === 1 || this.isAdmin === true"
       type="button"
       class="fas fa-edit fa mx-3"
       aria-hidden="true"
@@ -30,7 +30,7 @@
 
       <!-- Bouton suppression du commentaire -->
       <i
-      v-if="commentDatas.commentOwner === 1"
+      v-if="commentDatas.commentOwner === 1 || this.isAdmin === true"
       type="button"
       class="fas fa-trash fa"
       aria-hidden="true"
@@ -52,7 +52,7 @@
 <script>
 export default {
   name: "Comment",
-  props: ["commentDatas"],
+  props: ["commentDatas", "isAdmin"],
   methods: {
     sendDeleteComment() { // Envoi événement de suppression du commentaire
       this.$emit('delete-comment');

@@ -4,7 +4,7 @@
   <article class="card mb-3 mx-auto">
     <!-- Utilisation d'une carte de Bootstrap -->
     <div class="card-body">
-      <p class="text-left text-muted small">
+      <p class="text-left text-muted">
         <img :src="post.avatar_url" :alt="post.username" id="miniAvatar"> 
         {{ post.username }} · Post créé {{ post.dateCreation }}
       </p>
@@ -56,7 +56,7 @@
         <div class="col-md-9 text-right text-secondary">
           <!-- Bouton suppression du post -->
           <i
-          v-if="post.postOwner > 0"
+          v-if="post.postOwner > 0 || this.isAdmin === true"
           type="button"
           class="fas fa-trash fa-lg"
           aria-hidden="true"
@@ -80,7 +80,7 @@
 
 <script>
 export default {
-  props: ["post", "thisPostComments"],
+  props: ["post", "thisPostComments", "isAdmin"],
   data() {
     return {
       cursor: "pointer", // Change le curseur selon que l'on est dans la page principale ou bien dans un post spécifique
@@ -109,7 +109,7 @@ export default {
       }
     },
     deletePost() { // Suppression d'un post
-      if (this.post.postOwner > 0) {
+      if (this.post.postOwner > 0 || this.isAdmin === true) {
         this.$emit("delete-post");
       }
     },

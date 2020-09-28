@@ -168,3 +168,17 @@ exports.deleteUser = (req, res) => {
             .catch(err => res.status(500).json(err));
     });
 };
+
+// Récupération du role de l'utilisateur pour la gestion du role admin
+exports.getCurrentUserRole = (req, res) => {
+    const userID = res.locals.userID;
+
+    const getUserQuery = `SELECT user_id, role FROM users WHERE user_id = ?`;
+    connection.query(getUserQuery, [userID], function(err, result) {
+        // Gestion des erreurs
+        if (err) return res.status(500).json(err.message);
+        if (result.length == 0) return res.status(404).json({ message: "Error : user not found" });
+
+        return res.status(200).json(result[0]);
+    });
+};

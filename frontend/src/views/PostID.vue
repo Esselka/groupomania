@@ -14,6 +14,7 @@
         v-if="post"
         :post="post[0]"
         :thisPostComments="post[0].commentsResult"
+        :isAdmin="isAdmin"
         @positive-vote="reactToPost(post[0].post_id, '1')"
         @negative-vote="reactToPost(post[0].post_id, '-1')"
         @delete-post="deletePost(post[0].slug)"
@@ -26,8 +27,9 @@
             v-if="showCommentSection"
           >
             <button
-              class="col-3 btn btn-warning form-control text-center mt-2"
+              class="col-3 btn text-white form-control text-center mt-2"
               type="submit"
+              style="background: #FD2D01;"
               @click.prevent="createComment(post[0].post_id)"
             >Poster
             </button>
@@ -51,23 +53,32 @@
       v-for="comment in post.commentsResult"
       :key="comment.comment_id"
       :commentDatas="comment"
+      :isAdmin="isAdmin"
       @delete-comment="deleteComment(comment.post_id, comment.comment_id)"
       @modify-comment="toggleShowModifyCommentSection(comment.comment_id)"
       >
 
       <!-- Espace de modification de commentaire -->
         <template v-slot:modifyComment>
-          <CreateComment
-            @comment-sent="setCommentText"
-            v-if="showModifyCommentSection && currentCommentID === comment.comment_id"
-          >
-            <button
-              class="col-3 btn btn-warning form-control text-center mt-2"
-              type="submit"
-              @click.prevent="modifyComment(comment.post_id, comment.comment_id)"
-            >Modifier
-            </button>
-          </CreateComment>
+        <div v-if="showModifyCommentSection && currentCommentID === comment.comment_id">
+          <input
+            class="form-control text-center"
+            type="text"
+            v-model="comment.text"
+            id="inputModifyComment"
+            rows="2"
+            maxlength="200"
+            aria-label="Modifier commentaire"
+            aria-describedby="commentInput"
+          />
+          <button
+            class="col-3 btn form-control text-white text-center mt-2"
+            style="background: #FD2D01;"
+            type="submit"
+            @click.prevent="modifyComment(comment.post_id, comment.comment_id)"
+          >Modifier
+          </button>
+        </div>
           <InfoMessage
             v-if="alert.active && alert.activeComment && currentCommentID === comment.comment_id"
             :alertType="alert.type"
@@ -112,6 +123,7 @@ export default {
       currentPostID: "", // Stock le postID actuel pour la gestion des commentaires pour chaque post
       currentCommentID: "", // Stock le commentID actuel pour la modification d'un commentaire en particulier
       commentMessageInfo: "", // Message à afficher en cas de modification/suppression d'un commentaire réussie
+      isAdmin: false, // Un utilisateur est-il admin ? false par défaut
     }
   },
   methods: {
@@ -245,8 +257,11 @@ export default {
       }
     },
     modifyComment(postID, commentID) {
+      // Récupération du texte du commentaire modifié
+      const modifiedCommentText = document.getElementById("inputModifyComment").value;
+
       this.$axios
-      .put(`posts/${postID}/comments/${commentID}`, { text: this.commentText })
+      .put(`posts/${postID}/comments/${commentID}`, { text: modifiedCommentText })
       .then((response) => {
         if (response.status === 200) {
           this.showModifyCommentSection = false; // Cache la section de modification du commentaire
@@ -341,10 +356,40 @@ export default {
         this.currentCommentID = commentID;
         this.showModifyCommentSection = true;
       }
-    }
+    },
+    getUserRole() {
+      this.$axios
+      .get('/users/currentUserRole')
+      .then((response) => {
+        this.isAdmin = response.data.role === 'admin';
+      })
+      .catch((err) => {
+        if (err.response.status === 401) {
+          this.createAlert("alert-danger mt-5", "Session expirée, veuillez vous reconnecter.");
+          // Retour à la page de login 4s après que le message de session expirée se soit affiché
+          setTimeout(() => {
+            this.$router.push({ name: "Signin" });
+          }, 4000);
+        }
+        if (err.response.status === 404) {
+          this.createAlert("alert-danger mt-5", "L'utilisateur n'existe pas.");
+          // Rafrâichit la page 4s après l'affichage du message d'erreur
+          setTimeout(() => {
+            this.$router.go();
+          }, 4000);
+        }
+        if (err.response.status === 500) {
+          this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+          setTimeout(() => {
+            this.$router.go();
+          }, 4000);
+        }
+      })
+    },
   },
   mounted() { // Récupération des données d'un post en particulier, définition du titre de la page
     this.getOnePost(this.$route.params.slug);
+    this.getUserRole(); // Récupère le role de l'utilisateur pour lui donner ou non des des droits d'admin
     document.title = `Groupomania | Espace post et commentaires`;
   },
 }

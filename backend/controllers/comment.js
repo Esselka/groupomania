@@ -23,12 +23,14 @@ exports.modifyComment = (req, res) => {
     const postID = req.params.postId;
     const commentID = req.params.commentId;
 
-    let findCommentQuery = "SELECT text, date, user_id FROM comments WHERE comment_id = ? and post_id";
-    connection.query(findCommentQuery, [commentID, postID], function(err, result) {
+    let findCommentQuery = `SELECT text, date, user_id,
+    (SELECT role from users where user_id = ? ) AS userRole
+    FROM comments WHERE comment_id = ? and post_id`;
+    connection.query(findCommentQuery, [userID, commentID, postID], function(err, result) {
         // Gestion des erreurs
         if (err) return res.status(500).json(err.message);
         // Vérification du propriétaire du commentaire
-        if (result[0].user_id != userID) {
+        if (result[0].user_id != userID && result[0].userRole != 'admin') {
             return res.status(403).json({ error: "Forbidden : not the owner of the comment !" });
         }
 
@@ -51,12 +53,14 @@ exports.deleteComment = (req, res) => {
     const commentID = req.params.commentId;
     const postID = req.params.postId;
 
-    let verifyCommentOwnerQuery = "SELECT user_id FROM comments WHERE comment_id = ?";
-    connection.query(verifyCommentOwnerQuery, [commentID], function(err, result) {
+    let verifyCommentOwnerQuery = `SELECT user_id,
+    (SELECT role from users where user_id = ? ) AS userRole
+    FROM comments WHERE comment_id = ?`;
+    connection.query(verifyCommentOwnerQuery, [userID, commentID], function(err, result) {
         // Gestion des erreurs
         if (err) return res.status(500).json(err.message);
         // Vérification du propriétaire du commentaire
-        if (result[0].user_id != userID) {
+        if (result[0].user_id != userID && result[0].userRole != 'admin') {
             return res.status(403).json({ error: "Forbidden : not the owner of the comment !" });
         }
 

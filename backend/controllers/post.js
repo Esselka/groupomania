@@ -122,17 +122,17 @@ exports.modifyPost = (req, res) => {
 // Suppression d'un post
 exports.deletePost = (req, res) => {
     const slug = req.params.slug;
-    const userID = res.locals.userID;
+    const userID = res.locals.userID; // Vérifier si user est un admin
 
-    let checkOwnerQuery = 'SELECT user_id, image_url, post_id FROM posts WHERE slug = ?';
-    connection.query(checkOwnerQuery, [slug], function(err, result) {
+    let checkOwnerQuery = `SELECT user_id, image_url, post_id, 
+    (SELECT role from users where user_id = ? ) AS userRole
+    FROM posts WHERE slug = ?`;
+    connection.query(checkOwnerQuery, [userID, slug], function(err, result) {
         // Gestion des erreurs
         if (err) return res.status(500).json(err.message);
 
-        const postID = result[0].post_id;
-
         // Vérification du propriétaire du post
-        if (result[0].user_id != userID) {
+        if (result[0].user_id != userID && result[0].userRole != 'admin') {
             return res.status(403).json({ error: 'Forbidden : not the owner of the post !' });
         }
         // S'il y a une image, suppression de cette image localement

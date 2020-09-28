@@ -10,5 +10,6 @@ router.put('/modifyAvatar', auth, multer, userCtrl.modifyAvatar);
 router.get('/myDatas', auth, userCtrl.getUserDatas);
 router.put('/:userId', auth, userCtrl.modifyUser);
 router.post('/delete', auth, userCtrl.deleteUser);
+router.get('/currentUserRole', auth, userCtrl.getCurrentUserRole);
 
 module.exports = router;
