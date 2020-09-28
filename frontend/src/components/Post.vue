@@ -20,7 +20,7 @@
         <img :src="post.image_url" :alt="post.title" />
       </div>
       <!-- Fin -->
-      <p class="card-text text-left text-muted mt-2">{{ this.getPoints }} points · <span type="button" @click="goToPost(post.slug)"></span>{{ post.commentsNumber }} commentaires</span></p>
+      <p class="card-text text-left text-muted mt-2">{{ this.getPoints }} points · <span type="button" @click="goToPost(post.slug)">{{ post.commentsNumber }} commentaires</span></p>
       <!-- <p class="text-danger font-weight-bold">{{ post }}</p> -->
       <div class="d-flex justify-content-center">
         <div class="col-md-3 text-left">
