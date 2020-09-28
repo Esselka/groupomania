@@ -60,7 +60,7 @@ export default {
     },
   },
   mounted() {
-    // A la connexion : supprime le token (s'il existe) et définit le titre de la page
+    // Au chargement de la page de connexion : supprime l'ancien token (s'il existe) et définit le titre de la page
     sessionStorage.removeItem("token");
     delete this.$axios.defaults.headers.common["Authorization"];
     document.title = "Groupomania | Se connecter";

@@ -345,7 +345,7 @@ export default {
   },
   mounted() { // Récupération des données d'un post en particulier, définition du titre de la page
     this.getOnePost(this.$route.params.slug);
-    document.title = `Groupomania | ${this.post[0].title}`;
+    document.title = `Groupomania | Espace post et commentaires`;
   },
 }
 </script>

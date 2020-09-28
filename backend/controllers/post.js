@@ -2,6 +2,7 @@ const connection = require('../databaseConnection');
 const fs = require('fs');
 const slugCreator = require('../helpers/slug_creator');
 
+// Création d'un nouveau post
 exports.createPost = (req, res) => {
     const userID = res.locals.userID;
     const title = req.body.title;
@@ -89,6 +90,7 @@ exports.getAllPosts = (req, res) => {
     });
 };
 
+// Modification d'un post
 exports.modifyPost = (req, res) => {
     const userID = res.locals.userID;
     const slug = req.params.slug;
@@ -117,6 +119,7 @@ exports.modifyPost = (req, res) => {
     });
 };
 
+// Suppression d'un post
 exports.deletePost = (req, res) => {
     const slug = req.params.slug;
     const userID = res.locals.userID;

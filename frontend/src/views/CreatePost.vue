@@ -111,7 +111,7 @@ export default {
         });
       }
     },
-    setImage(event) {
+    setImage(event) { // Utiliser pour la prévisualisation de l'image avant de publier le post
       this.image = event.target.files[0];
       this.previewImage = URL.createObjectURL(event.target.files[0]);
     }

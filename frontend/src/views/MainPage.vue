@@ -207,6 +207,7 @@ export default {
   },
   mounted() {
     this.getAllPosts(); // Récupération de tous les posts avant affichage de la page
+    document.title = 'Groupomania | Le réseau social de votre entreprise'; // Définit le titre de la page
   },
 }
 </script>
