@@ -35,8 +35,8 @@ exports.getOnePost = (req, res) => {
         (SELECT COUNT(*) FROM comments WHERE comments.post_id=posts.post_id) AS commentsNumber,
         (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='1' ) AS positiveVotes,
         (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='-1' ) AS negativeVotes,
-        (SELECT type FROM votes WHERE post_id = ? AND user_id = ? ) AS yourVote,
-        COUNT(CASE WHEN posts.user_id = ? then 1 else null end) AS postOwner
+        (SELECT type FROM votes WHERE post_id = ? AND user_id = ?) AS yourVote,
+        (CASE WHEN posts.user_id = ? THEN 1 ELSE 0 END) AS postOwner
         FROM posts
         LEFT JOIN users ON posts.user_id = users.user_id
         LEFT JOIN votes ON posts.user_id = votes.user_id
@@ -47,10 +47,11 @@ exports.getOnePost = (req, res) => {
             if (result.length == 0) return res.status(404).json({ message: "This post doesn't exists !" });
 
             // Récupération des commentaires liés à ce post
-            let getCommentsQuery = `SELECT firstname, lastname, username, avatar_url, comments.text, DATE_FORMAT(comments.date, 'le %e-%m-%Y à %H:%i') AS commentCreationDate
+            let getCommentsQuery = `SELECT post_id, comment_id, firstname, lastname, username, avatar_url, comments.text, DATE_FORMAT(comments.date, 'le %e-%m-%Y à %H:%i') AS commentCreationDate,
+            (CASE WHEN comments.user_id = ? THEN 1 ELSE 0 END) AS commentOwner
             FROM users LEFT JOIN comments ON users.user_id = comments.user_id
             WHERE post_id = ? order by comments.date DESC`;
-            connection.query(getCommentsQuery, [result[0].post_id], function(error, commentsResult) {
+            connection.query(getCommentsQuery, [userID, postID], function(error, commentsResult) {
                 if (error) return res.status(500).json(error.message);
                 // Retourne un objet contenant les données du post et les commentaires
                 return res.status(200).json({
@@ -70,8 +71,8 @@ exports.getAllPosts = (req, res) => {
     (SELECT COUNT(*) FROM comments WHERE comments.post_id=posts.post_id) AS commentsNumber,
     (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='1' ) AS positiveVotes,
     (SELECT COUNT(*) FROM votes WHERE votes.post_id=posts.post_id AND type='-1' ) AS negativeVotes,
-    COUNT(CASE WHEN posts.user_id = ? then 1 else null end) AS postOwner,
-    SUM(CASE WHEN votes.user_id = ? AND votes.type = '1' then 1 WHEN votes.user_id = ? AND votes.type = '-1' then -1 else 0 end) AS yourVote
+    (CASE WHEN posts.user_id = ? THEN 1 ELSE 0 END) AS postOwner,
+    SUM(CASE WHEN votes.user_id = ? AND votes.type = '1' THEN 1 WHEN votes.user_id = ? AND votes.type = '-1' THEN -1 ELSE 0 END) AS yourVote
     FROM posts
     LEFT JOIN users ON posts.user_id = users.user_id 
     LEFT JOIN votes ON posts.post_id = votes.post_id 

@@ -10,7 +10,7 @@
       rows="2"
       maxlength="200"
       required
-      placeholder="Créer un commentaire (200 caractères max)"
+      placeholder="Votre commentaire ici (200 caractères max)"
       aria-label="Ecrire un commentaire"
       v-model="commentText"
       @input="sendComment"

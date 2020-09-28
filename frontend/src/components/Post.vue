@@ -20,7 +20,7 @@
         <img :src="post.image_url" :alt="post.title" />
       </div>
       <!-- Fin -->
-      <p class="card-text text-left text-muted mt-2">{{ this.getPoints }} points · {{ post.commentsNumber }} commentaires</p>
+      <p class="card-text text-left text-muted mt-2">{{ this.getPoints }} points · <span type="button" @click="goToPost(post.slug)"></span>{{ post.commentsNumber }} commentaires</span></p>
       <!-- <p class="text-danger font-weight-bold">{{ post }}</p> -->
       <div class="d-flex justify-content-center">
         <div class="col-md-3 text-left">
@@ -149,11 +149,11 @@ export default {
   max-width: 25px;
 }
 article {
-  max-width: 700px;
+  max-width: 740px;
 }
 
 img {
-  max-width: 650px;
+  max-width: 690px;
 }
 
 #titre {
@@ -161,9 +161,15 @@ img {
   font-size: 1.4rem;
 }
 
+@media (max-width: 768px) {
+  img {
+    max-width: 650px;
+  }
+}
+
 @media (max-width: 576px) {
   img {
-    max-width: 300px;
+    max-width: 320px;
   }
 }
 </style>

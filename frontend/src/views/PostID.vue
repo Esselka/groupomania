@@ -19,7 +19,7 @@
         @delete-post="deletePost(post[0].slug)"
         @toggle-comment-section="toggleShowCommentSection(post[0].post_id)"
       >
-      <!-- Espace commentaire -->
+      <!-- Espace de création de commentaire -->
         <template v-slot:createComment>
           <CreateComment
             @comment-sent="setCommentText"
@@ -28,7 +28,7 @@
             <button
               class="col-3 btn btn-warning form-control text-center mt-2"
               type="submit"
-              @click.prevent="postComment(post[0].post_id)"
+              @click.prevent="createComment(post[0].post_id)"
             >Poster
             </button>
           </CreateComment>
@@ -40,6 +40,42 @@
         </template>
         <!-- Fin -->
       </Post>
+      <!-- Fin -->
+
+      <!-- Message qui informe l'utilisateur sur la suppression/modification de son commentaire -->
+      <span class="alert alert-success" v-if="commentMessageInfo">{{ commentMessageInfo }}</span>
+      <!-- Fin -->
+
+      <!-- Affichage des commentaires liés à ce post -->
+      <Comment
+      v-for="comment in post.commentsResult"
+      :key="comment.comment_id"
+      :commentDatas="comment"
+      @delete-comment="deleteComment(comment.post_id, comment.comment_id)"
+      @modify-comment="toggleShowModifyCommentSection(comment.comment_id)"
+      >
+
+      <!-- Espace de modification de commentaire -->
+        <template v-slot:modifyComment>
+          <CreateComment
+            @comment-sent="setCommentText"
+            v-if="showModifyCommentSection && currentCommentID === comment.comment_id"
+          >
+            <button
+              class="col-3 btn btn-warning form-control text-center mt-2"
+              type="submit"
+              @click.prevent="modifyComment(comment.post_id, comment.comment_id)"
+            >Modifier
+            </button>
+          </CreateComment>
+          <InfoMessage
+            v-if="alert.active && alert.activeComment && currentCommentID === comment.comment_id"
+            :alertType="alert.type"
+            :alertMessage="alert.message"
+          />
+        </template>
+        <!-- Fin -->
+      </Comment>
       <!-- Fin -->
     </div>
   </div>
@@ -71,8 +107,11 @@ export default {
       },
       post: [false], // Stock le post ainsi que les commentaires liés à ce post
       showCommentSection: true, // Montrer la section commentaire par défaut
+      showModifyCommentSection: false, // Cacher la section de modification de commentaire par défaut
       commentText: "", // Sauvegarde du texte du commentaire avant envoi
-      currentPostID: "" // Stock le postID actuel pour la gestion des commentaires pour chaque post
+      currentPostID: "", // Stock le postID actuel pour la gestion des commentaires pour chaque post
+      currentCommentID: "", // Stock le commentID actuel pour la modification d'un commentaire en particulier
+      commentMessageInfo: "", // Message à afficher en cas de modification/suppression d'un commentaire réussie
     }
   },
   methods: {
@@ -85,7 +124,7 @@ export default {
       alert.message = message;
     },
     commentAlert(type, message) {
-      // Crée une alerte pendant 4 secondes
+      // Crée une alerte pendant 3 secondes
       const dataAlert = this.$data.alert;
       dataAlert.active = true;
       dataAlert.type = type;
@@ -95,7 +134,7 @@ export default {
         dataAlert.activeComment = false;
         dataAlert.type = "";
         dataAlert.message = "";
-      }, 4000);
+      }, 3000);
         this.getOnePost(this.$route.params.slug); // Rafraîchit le nombre de commentaires
     },
     getOnePost(slug) {
@@ -176,7 +215,7 @@ export default {
     setCommentText(text) {
       this.commentText = text; // Stockage du texte du commentaire avant envoi
     },
-    postComment(postID) {
+    createComment(postID) {
       const formValid = document
         .getElementsByName("formComment")[0]
         .checkValidity();
@@ -205,6 +244,86 @@ export default {
         });
       }
     },
+    modifyComment(postID, commentID) {
+      this.$axios
+      .put(`posts/${postID}/comments/${commentID}`, { text: this.commentText })
+      .then((response) => {
+        if (response.status === 200) {
+          this.showModifyCommentSection = false; // Cache la section de modification du commentaire
+          this.commentMessageInfo = "Commentaire modifié avec succés";
+          this.getOnePost(this.$route.params.slug); // Rafraîchit les données de la page
+          // Cache le message de modification effectuée après 3.5s d'affichage
+          setTimeout(() => {
+            this.commentMessageInfo = "";
+          }, 3500);
+        }
+      })
+      .catch((err) => {
+        if (err.response.status === 400) {
+          this.createAlert("alert-warning mt-5", "Modification échouée !");
+          // Rafrâichit la page 3s après l'affichage du message d'erreur
+          setTimeout(() => {
+            this.$router.go();
+          }, 3000);
+        }
+        if (err.response.status === 401) {
+          this.createAlert("alert-danger mt-5", "Session expirée, veuillez vous reconnecter.");
+          // Retour à la page de login 4s après que le message de session expirée se soit affiché
+          setTimeout(() => {
+            this.$router.push({ name: "Signin" });
+          }, 4000);
+        }
+        if (err.response.status === 403) {
+          this.createAlert("alert-danger mt-5", "Vous devez être le créateur du commentaire pour le modifier !");
+          // Rafrâichit la page 4s après l'affichage du message d'erreur
+          setTimeout(() => {
+            this.$router.go();
+          }, 4000);
+        }
+        if (err.response.status === 500) {
+          this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+          setTimeout(() => {
+            this.$router.go();
+          }, 4000);
+        }
+      });
+    },
+    deleteComment(postID, commentID) {
+      this.$axios
+      .delete(`posts/${postID}/comments/${commentID}`)
+      .then((response) => {
+        if (response.status === 200) {
+          this.commentMessageInfo = "Commentaire supprimé avec succés";
+          this.getOnePost(this.$route.params.slug); // Rafraîchit les données de la page
+          // Cache le message de suppression effectuée après 3.5s d'affichage
+          setTimeout(() => {
+            this.commentMessageInfo = "";
+          }, 3500);
+        }
+      })
+      .catch((err) => {
+        if (err.response.status === 401) {
+          this.createAlert("alert-danger mt-5", "Session expirée, veuillez vous reconnecter.");
+          // Retour à la page de login 4s après que le message de session expirée se soit affiché
+          setTimeout(() => {
+            this.$router.push({ name: "Signin" });
+          }, 4000);
+        }
+        if (err.response.status === 403) {
+          this.createAlert("alert-danger mt-5", "Vous devez être le créateur du commentaire pour le supprimer !");
+          // Rafrâichit la page 4s après l'affichage du message d'erreur
+          setTimeout(() => {
+            this.$router.go();
+          }, 4000);
+        }
+        if (err.response.status === 500) {
+          this.createAlert("alert-warning mt-5", "Erreur serveur ! Veuillez réessayer plus tard.");
+          setTimeout(() => {
+            this.$router.go();
+          }, 4000);
+        }
+      });
+    },
     toggleShowCommentSection(postID) { // Montrer/Cacher l'espace de création d'un commentaire
       if (this.showCommentSection) {
         this.currentPostID = postID;
@@ -214,9 +333,19 @@ export default {
         this.showCommentSection = true;
       }
     },
+    toggleShowModifyCommentSection(commentID) {
+      if (this.showModifyCommentSection) {
+        this.currentCommentID = commentID;
+        this.showModifyCommentSection = false;
+      } else {
+        this.currentCommentID = commentID;
+        this.showModifyCommentSection = true;
+      }
+    }
   },
-  mounted() {
-    this.getOnePost(this.$route.params.slug)
+  mounted() { // Récupération des données d'un post en particulier, définition du titre de la page
+    this.getOnePost(this.$route.params.slug);
+    document.title = `Groupomania | ${this.post[0].title}`;
   },
 }
 </script>

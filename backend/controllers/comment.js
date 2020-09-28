@@ -9,9 +9,9 @@ exports.createComment = (req, res) => {
     let createCommentQuery = 'INSERT INTO comments VALUES (NULL, ?, ?, NOW(), ?)';
     let values = [userID, postID, text];
     connection.query(createCommentQuery, values, function(err) {
-        if (err) {
-            return res.status(500).json(err.message);
-        }
+        // Gestion des erreurs
+        if (err) return res.status(500).json(err.message);
+
         return res.status(201).json({ message: 'Comment created !' });
     });
 };
@@ -20,10 +20,11 @@ exports.createComment = (req, res) => {
 exports.modifyComment = (req, res) => {
     const userID = res.locals.userID;
     const text = req.body.text;
+    const postID = req.params.postId;
     const commentID = req.params.commentId;
 
-    let findCommentQuery = "SELECT text, date, user_id FROM comments WHERE comment_id = ?";
-    connection.query(findCommentQuery, [commentID], function(err, result) {
+    let findCommentQuery = "SELECT text, date, user_id FROM comments WHERE comment_id = ? and post_id";
+    connection.query(findCommentQuery, [commentID, postID], function(err, result) {
         // Gestion des erreurs
         if (err) return res.status(500).json(err.message);
         // Vérification du propriétaire du commentaire
@@ -31,13 +32,12 @@ exports.modifyComment = (req, res) => {
             return res.status(403).json({ error: "Forbidden : not the owner of the comment !" });
         }
 
-        let modifyCommentQuery = 'UPDATE comments SET text = ?, date = NOW() WHERE comment_id = ?';
-        let values = [text, commentID];
-        connection.query(modifyCommentQuery, values, function(err, result) {
-            if (err) {
-                return res.status(500).json(err.message);
-            }
-            if (result.affectedRows == 0) {
+        let modifyCommentQuery = 'UPDATE comments SET text = ?, date = NOW() WHERE comment_id = ? AND post_id = ?';
+        let values = [text, commentID, postID];
+        connection.query(modifyCommentQuery, values, function(err, resultModify) {
+            // Gestion des erreurs
+            if (err) return res.status(500).json(err.message);
+            if (resultModify.affectedRows == 0) {
                 return res.status(400).json({ message: "Modification failed !" });
             }
             return res.status(200).json({ message: "Modification successfull !" });
@@ -49,6 +49,7 @@ exports.modifyComment = (req, res) => {
 exports.deleteComment = (req, res) => {
     const userID = res.locals.userID;
     const commentID = req.params.commentId;
+    const postID = req.params.postId;
 
     let verifyCommentOwnerQuery = "SELECT user_id FROM comments WHERE comment_id = ?";
     connection.query(verifyCommentOwnerQuery, [commentID], function(err, result) {
@@ -59,12 +60,12 @@ exports.deleteComment = (req, res) => {
             return res.status(403).json({ error: "Forbidden : not the owner of the comment !" });
         }
 
-        let deleteCommentQuery = 'DELETE FROM comments WHERE comment_id = ?';
-        connection.query(deleteCommentQuery, [commentID], function(err) {
-            if (err) {
-                return res.status(500).json(err.message);
-            }
+        let deleteCommentQuery = 'DELETE FROM comments WHERE comment_id = ? AND post_id = ?';
+        connection.query(deleteCommentQuery, [commentID, postID], function(err) {
+            // Gestion des erreurs
+            if (err) return res.status(500).json(err.message);
+
             return res.status(200).json({ message: 'Comment deleted !' });
-        })
-    })
+        });
+    });
 };
